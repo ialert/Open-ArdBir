@@ -324,7 +324,7 @@ boolean pumpRest     = false;
 boolean resume       = false;
 boolean IodineTest   = false;
 boolean DelayedMode  = false;
-
+boolean isHeatOn = false;
 
 //float mset_temp;
 float stageTemp;
@@ -708,11 +708,13 @@ void allOFF() {
 }
 
 void heat_on() {
+  isHeatOn = true;
   digitalWrite (Heat, HIGH);
   ledHeatON();
 }
 
 void heat_off(boolean mheat) {
+  isHeatOn = false;
   digitalWrite (Heat, LOW);
   ledHeatStatus(mheat);
 }
