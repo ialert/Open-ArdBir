@@ -7,7 +7,7 @@
 // 1 Brauduino Original (Matho's PCB)
 // 2 Brauduino by DanielXan
 // 3 ArdBir by DanielXan
-#define PCBType 3
+#define PCBType 5
 
 // SET LCD and Language
 // LCD 16 or 20
@@ -20,7 +20,7 @@
 // 4 Portuguese
 // 5 Russian    (only 20 x 4)
 // 6 Norwegian  (only 20 x 4)
-#define LCDLanguage 2
+#define LCDLanguage 1
 
 // ==============================================
 // END OF SETTING SECTION
@@ -253,6 +253,8 @@ EEPROM MAP
   #include "Pcb_ArdBir_DanielXan.h"
 #elif PCBType == 4 
   #include "Pcb_11s.h"
+#elif PCBType == 5
+#include "Pcb_ArdBir_ialert.h"
 #endif
 
 
