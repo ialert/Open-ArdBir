@@ -46,10 +46,12 @@ void LCD_Procedo(){
 }
 
 
-void LCD_Default(float Temp){
+void LCD_Default(float Temp,float Temp1,float Temp2){
   Intestazione();
 
-  PrintTemp(6,1,Temp,2);
+  PrintTemp(0,1,Temp1,1);
+  //PrintTemp(6,1,Temp,1);
+  PrintTemp(13,1,Temp2,1);
 
   LCDClear(2);
 

@@ -52,7 +52,7 @@ void LCD_Conferma(){
 }
 */
 
-void LCD_Default(float Temp){
+void LCD_Default(float Temp,float Temp1,float Temp2){
   Intestazione();
   lcd.setCursor(1,1);
   PrintTemp(Temp);

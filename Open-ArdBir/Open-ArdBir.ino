@@ -315,7 +315,7 @@ double Input;
 double Output;
 
 
-boolean Conv_start   = false;
+boolean Conv_start[]   = {false,false};
 boolean mpump        = false;
 boolean mheat        = false;
 boolean b_Enter      = false;
@@ -330,7 +330,8 @@ boolean DelayedMode  = false;
 float stageTemp;
 float boilStageTemp;
 float Temp_Now;
-
+float Temp_Now1;
+float Temp_Now2;
 
 byte x;
 byte ScaleTemp       = EEPROM.read(10);;
@@ -404,57 +405,73 @@ void pauseStage(){
   } 
 }
 
-void dsInizializza() {
+void Temperature() {
+
+  requestTemperature(ds,0);
+  float curTemp1 = getTemperature(ds,0);
+  Temp_Now1 = curTemp1;
+
+  requestTemperature(ds1,1);
+  float curTemp2 = getTemperature(ds1,1);
+  Temp_Now2 = curTemp2;
+
+  if(Temp_Now1 > 0 && Temp_Now2 > 0) {
+    Temp_Now = (Temp_Now1 + Temp_Now2)/2;
+  } else if(Temp_Now1 > 0) {
+    Temp_Now = Temp_Now1;
+  } else if(Temp_Now2 > 0) {
+    Temp_Now = Temp_Now2;
+  } else {
+    Temp_Now = 0;
+  }
+
+}
+
+void dsInizializza(OneWire ds) {
   ds.reset();
   ds.skip();
 }
 
-void Temperature() { // reads the DS18B20 temerature probe 
-  dsInizializza();
-  
-  // start conversion and return
-  if (!(Conv_start)) {
-    ds.write(0x44, 0);
-    Conv_start = true;
-    return;
+void requestTemperature(OneWire ds,int i) {
+  dsInizializza(ds);
+  if (!(Conv_start[i])) {
+    ds.write(0x44);
+    Conv_start[i] = true;
   }
-  if (Conv_start) { // check for conversion if it isn't complete return if it is then convert to decimal
-    Busy = ds.read_bit();
-    if (Busy == 0) return;
+}
 
-    dsInizializza();
-    
-    ds.write(0xBE);  
+float getTemperature(OneWire ds,int i) { // reads the DS18B20 temerature probe
+
+  float curTemp;
+  // start conversion and return
+  if (Conv_start[i]) { // check for conversion if it isn't complete return if it is then convert to decimal
+    Busy = ds.read_bit();
+
+    dsInizializza(ds);
+
+    ds.write(0xBE);
     for ( byte i = 0; i < 9; i++) {           // with crc we need 9 bytes
       data[i] = ds.read();
-    } 
+    }
     /* add this routine for crc version */
     if ( OneWire::crc8(data, 8) != data[8]) {  //if checksum fails start a new conversion right away
-      dsInizializza();
-      
+      dsInizializza(ds);
+
       ds.write(0x44, 0);
-      Conv_start = true;
-      return;
+      Conv_start[i] = true;
+      return 0;
       /*Fine Routine crc*/
     }
 
     unsigned int raw = (data[1] << 8) + data[0];
-    
-    Temp_Now = (raw & 0xFFFC) * 0.0625;
-    if (ScaleTemp == 1) Temp_Now = Temp_Now * 1.8 + 32.0;
-    
-    //byte Correzione;
-    //r_set(Correzione, 7);
-    //Temp_Now = Temp_Now + ((float)((Correzione - 50) / 10.0));
-    
-    Temp_Now = Temp_Now + ((float)((r_set(7) - 50) / 10.0));
-    
-    
-    //Temp_Now = Temp_Now + ((EEPROM.read(6) - 50) / 10.0);
-    
-    Conv_start = false;
-    return;
-  } 
+
+    curTemp = (raw & 0xFFFC) * 0.0625;
+    if (ScaleTemp == 1) curTemp = curTemp * 1.8 + 32.0;
+    curTemp = curTemp + ((EEPROM.read(6) - 50) / 10.0);
+
+    Conv_start[i] = false;
+    return curTemp;
+  }
 }
 
 // PID_HEAT modified to use SetMode(MANUAL)
@@ -1055,7 +1072,7 @@ void add_malt () {
 
   //wait_for_confirm(malt, 1, 2, 1);
   if (wait_for_confirm(1, 2, 1) == false) {
-    LCD_Default(Temp_Now);
+    LCD_Default(Temp_Now,Temp_Now1,Temp_Now2);
     delay(50);
     mainMenu = 0;
     b_Enter  = false;
@@ -1138,7 +1155,7 @@ void remove_malt () {
     stageTime = r_set(73);
     //EEPROM.write(86, stageTime);
     s_set(86, stageTime);
-    LCD_Default(Temp_Now);
+    LCD_Default(Temp_Now,Temp_Now1,Temp_Now2);
     delay(50);
     mainMenu = 0;
     b_Enter  = false;
@@ -2558,7 +2575,7 @@ void loop() {
     allOFF();
     
     Temperature();
-    LCD_Default(Temp_Now);
+    LCD_Default(Temp_Now,Temp_Now1,Temp_Now2);
 
     if (btn_Press(Button_dn, 500))    mainMenu = 1;
     if (btn_Press(Button_start, 500)) mainMenu = 2;

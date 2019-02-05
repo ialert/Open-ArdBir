@@ -50,15 +50,16 @@ void LCD_Procedo(){
 }
 
 
-void LCD_Default(float Temp){
+void LCD_Default(float Temp,float Temp1,float Temp2){
   Intestazione();
 
-  //lcd.setCursor(6,1);
-  PrintTemp(6,1,Temp,2);
+  PrintTemp(0,1,Temp1,1);
+  //PrintTemp(6,1,Temp,1);
+  PrintTemp(13,1,Temp2,1);
 
   LCDClear(2);
-  
-  lcd.setCursor(0,3);
+
+  lcd.setCursor(1,3);
   lcd.print(F("--- Py\xC0"". A\xB3\xBF"". Hac\xBF""p."));
 }
 
