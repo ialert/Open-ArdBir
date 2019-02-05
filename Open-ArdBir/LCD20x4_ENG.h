@@ -1,6 +1,8 @@
 char *PIDName[]   ={"Use ", "Constant  kP", "Constant  kI", "Constant  kD", "SampleTime  ", "WindowSet ms", "Heat in Boil", "Calibration " , "Hysteresi  "};
 char *stageName[] ={"Mash In   ", "Phytase   ", "Glucanase ", "Protease  ", "\xE2""Amylase  ", "\xE0""Amylase1 ", "\xE0""Amylase2 ", "Mash Out  ", "Boil      ", "Cooling   ", "Whirlpool "};
-char *unitName[]  ={"Set Degrees", "Sensor     ", "Temp Boil  ", "Temp Boil  ", "Pump Cycle ", "Pump Rest  ", "Pmp PreMash", "Pmp on Mash", "Pmp MashOut", "Pmp on Boil", "Pump Stop  ", "Pump Stop  ", "PID Pipe   ", "Skip Add   ", "Skip Remove", "Skip Iodine", "IodineTime " , "Whirlpool "};
+char *unitName[]  ={"Set Degrees", "Sensor     ", "Temp Boil  ", "Temp Boil  ", "Pump Cycle ", "Pump Rest  ", "Pmp PreMash", "Pmp on Mash", "Pmp MashOut", "Pmp on Boil", "Pump Stop  ", "Pump Stop  ", "PID Pipe   ", "Skip Add   ", "Skip Remove", "Skip Iodine", "IodineTime " , "Whirlpool  ", "Heater err"};
+
+
 
 byte HeatONOFF[8]    = {B00000, B01010, B01010, B01110, B01110, B01010, B01010, B00000};  // [5] HEAT symbol
 byte RevHeatONOFF[8] = {B11111, B10101, B10101, B10001, B10001, B10101, B10101, B11111};  // [6] reverse HEAT symbol
@@ -310,21 +312,25 @@ void UnitSet(byte unitSet, byte i){
       break;
 
     case(4):// Durata Ciclo Pompa
-      LCDSpace(4);
-      FormatNumeri(unitSet, -2);
+      if (unitSet < 10) {
+        LCDSpace(6);
+      } else {
+        LCDSpace(5);
+      }
+      //FormatNumeri(unitSet, -1);
       //if (unitSet < 10) LCDSpace(1);
       lcd.print(unitSet);
-      lcd.print(F("'"));
+      //lcd.print(F("'"));
       break;
 
     case(5)://Durata Pausa Pompa
-      LCDSpace(5);
+      LCDSpace(6);
       lcd.print(unitSet);
       lcd.print(F("'"));
       break;
 
  default:
-     LCDSpace(4);
+     LCDSpace(5);
       if (unitSet == 0) lcd.print(F("Off"));
       if (unitSet == 1) lcd.print(F(" On"));
       break;
@@ -344,7 +350,7 @@ void UnitSet(byte unitSet, byte i){
     case(13):
     case(14):
     case(15):
-      LCDSpace(4);
+      LCDSpace(5);
       if (unitSet == 0) lcd.print(F(" No"));
       if (unitSet == 1) lcd.print(F("Yes"));
       break;
@@ -357,9 +363,14 @@ void UnitSet(byte unitSet, byte i){
       break;
 
     case(17):
-      if (unitSet == 0) lcd.print(F("    Off"));
-      if (unitSet == 1) lcd.print(F("   Cold"));
-      if (unitSet == 2) lcd.print(F("    Hot"));
+      if (unitSet == 0) lcd.print(F("     Off"));
+      if (unitSet == 1) lcd.print(F("    Cold"));
+      if (unitSet == 2) lcd.print(F("     Hot"));
+      break;
+    case(18):
+      LCDSpace(5);
+      if (unitSet == 0) lcd.print(F(" No"));
+      if (unitSet == 1) lcd.print(F("Yes"));
       break;
   }
 }
