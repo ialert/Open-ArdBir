@@ -1,9 +1,9 @@
 void Buzzer(byte NumBeep, int Period){
   for (byte i = 0; i < NumBeep; i++){
     #if ToneOnBuzzer == false
-      digitalWrite (Buzz, HIGH);
+      digitalWrite (Buzz, LOW);
       delay (Period);
-      digitalWrite(Buzz, LOW);
+      digitalWrite(Buzz, HIGH);
       delay(75);
     #elif ToneOnBuzzer == true
       tone(Buzz, 600, Period);

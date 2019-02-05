@@ -2496,6 +2496,7 @@ void setup() {
   pinMode (Heat, OUTPUT);
   pinMode (Pump, OUTPUT);
   pinMode (Buzz, OUTPUT);
+  digitalWrite(Buzz, HIGH);
   //w_StartTime = millis();
 
   //tell the PID to range between 0 and the full window size
