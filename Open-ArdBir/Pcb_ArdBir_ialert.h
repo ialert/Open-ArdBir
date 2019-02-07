@@ -15,5 +15,6 @@ const byte Buzz = 23;
 const byte Heat = 29;
 const byte HeatError = 22;
 
-const int Sensor_Pin = A1;
-unsigned int Sensitivity = 185;
+const int Sensor_Pin1 = A0;
+const int Sensor_Pin2 = A1;
+unsigned int Sensitivity = 66;

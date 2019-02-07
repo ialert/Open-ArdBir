@@ -142,7 +142,8 @@ EEPROM MAP
      25       Skip Iodine Test
      26       Iodine Time
      27       Whirlpool
-     28 -  31 [ SPACE ]
+     28       Check heater
+     29 -  31 [ SPACE ]
 
   RUN  (HTemp °C - LTemp °C - HTemp °F - LTemp °F - Time)
     32 -  36 MashIn
@@ -307,7 +308,8 @@ unsigned long TimeSpent;
 unsigned long w_StartTime;
 unsigned long start;
 unsigned long Timer; 
-
+unsigned long heatCheckTimer;
+boolean heaterErrors[]   = {false,false};
 byte WindowSize;
 
 double Setpoint;
@@ -337,6 +339,7 @@ byte x;
 byte ScaleTemp       = EEPROM.read(10);;
 byte SensorType      = EEPROM.read(11);;
 byte UseGAS          = EEPROM.read( 0);
+byte shouldCheckHeater = EEPROM.read(19);
 
 byte stageTime;
 byte hopTime;
@@ -377,6 +380,8 @@ byte SP_Symbol[8]    = {B11100, B10000, B11100, B00111, B11101, B00111, B00100, 
 byte PumpONOFF[8]    = {B00000, B01110, B01010, B01110, B01000, B01000, B01000, B00000};  // [3] Pump Symbol 
 byte RevPumpONOFF[8] = {B11111, B10001, B10101, B10001, B10111, B10111, B10111, B11111};  // [4] Reverse PUMP Symbol
 
+float Vcc = 5.0;
+float ACSoffset = Vcc/2;
 // ****************************************
 // ******** start of  the funtions ******** 
 // ****************************************
@@ -403,6 +408,81 @@ void pauseStage(){
     Buzzer(3, 100);
     Menu_2();
   } 
+}
+
+float getACS712(int pin) {
+    float Irms;
+    float Vpp;
+
+    Vpp = getVPP(pin);
+
+    Irms = ((Vpp - ACSoffset * 1000) / Sensitivity);
+    return Irms;
+}
+
+float getVPP(int pin)
+{
+  float result;
+  int readValue;
+  int maxValue = 0;
+  uint32_t start_time = millis();
+  while((millis()-start_time) < 475) //read every 0.95 Sec
+  {
+     readValue = analogRead(pin);
+     if (readValue > maxValue)
+     {
+         maxValue = readValue;
+     }
+  }
+
+    result = (maxValue / 1024.0) * Vcc * 1000; // Gets you mV
+   
+   return result;
+}
+
+void checkHeatStatus() {
+    if(shouldCheckHeater) {
+        uint32_t cur_time = millis();
+        if((cur_time - heatCheckTimer) > 60000) {
+          heatCheckTimer = cur_time;
+          if(isHeatOn) {
+            boolean isError = false;
+            boolean isBuzzedError = false;
+            float Irms1 = getACS712(Sensor_Pin1);
+            if(Irms1 <= 0) {
+               isError = true;
+               if(!heaterErrors[0]) {
+                 isBuzzedError = true;
+                 heaterErrors[0] = true;
+               }  
+            } else {
+              heaterErrors[0] = false;
+            }
+            
+            /*float Irms2 = getACS712(Sensor_Pin2);
+            if(Irms2 <= 0) {
+                isError = true;
+                if(!heaterErrors[1]) {
+                 isBuzzedError = true;
+                 heaterErrors[1] = true;
+               }  
+            } else {
+              heaterErrors[1] = false;
+            }*/
+
+            if(isError) {
+              digitalWrite (HeatError, HIGH);
+              if(isBuzzedError) {
+                Buzzer(10, 500);
+              }
+            } else {
+              digitalWrite (HeatError, LOW);
+              heaterErrors[0] = false;
+              heaterErrors[1] = false;
+            }
+          }
+        }
+    }
 }
 
 void Temperature() {
@@ -1199,6 +1279,7 @@ void manual_mode () {
   
   while (manualLoop) {            // manual loop
     Temperature();
+    checkHeatStatus();
     Setpoint = mset_temp;
     Input = Temp_Now;
     
@@ -1742,7 +1823,7 @@ void set_Unit () {
   byte unitSet;
   boolean unitLoop = false;
 
-  for (byte i = 10; i < 28; i++){
+  for (byte i = 10; i < 29; i++){
   
     // SALTA BLOCCHI POMPA SE SENSORE ESTERNO  
     if ((i >= 16 || i <= 19) && SensorType == 1) unitLoop = false;
@@ -1790,7 +1871,7 @@ void set_Unit () {
             Gradi();
           }
           if (i == 11) SensorType = unitSet;    
-
+          if(i == 28) shouldCheckHeater = unitSet;
           if (i == 16 && SensorType == 1) { 
             //Il SENSORE E' ESTERNO
             for (byte ii = i; ii < i + 4; ii++) s_set(ii, 1);
